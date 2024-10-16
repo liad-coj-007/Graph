@@ -271,13 +271,21 @@ class Graph{
 
 
   
-
-    // size_t memoryUseage() const {
-    //     size_t total = 0;
-    //     total += sizeof(graph);
-    //     total += graph.size() * sizeof(pair<Edge<V>,W>); 
-    //     return total;
-    // }
+    /**
+     * @brief return the allocate bytes of the graph
+     * use
+     * @return size_t
+     */
+    size_t memoryUseage() const {
+        size_t totalSize = sizeof(graph); 
+        for (const auto& outerPair : graph) {
+            totalSize += sizeof(outerPair.first) + sizeof(outerPair.second);
+            for (const auto& innerPair : outerPair.second) {
+                totalSize += sizeof(innerPair.first) + sizeof(innerPair.second);
+            }
+        }
+        return totalSize;
+    }
 
     /**
      * @brief return the weight of the edge we take
@@ -300,9 +308,10 @@ class Graph{
     /**
      * @brief return the end it of the graph
      * @return iterator
-     */
+     */            // For each inner unordered_map, calculate its memory usage
+
     Iterator end() const{
-        return  Graph::Iterator(this,graph.end());
+        return Graph::Iterator(this,graph.end());
     }
 
     /**
