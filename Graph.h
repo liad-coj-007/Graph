@@ -20,7 +20,7 @@ class Graph{
     bool ContainEdge(const V &from ,const V &to)const{
         
         auto neighbours = graph.find(from);
-        if(from == graph.end()){
+        if(neighbours == graph.end()){
             return false;
         }
         auto it = neighbours->second.find(to);
