@@ -4,6 +4,7 @@
 #include <algorithm> // for std::max and std::min
 #include <iostream> // For std::cout
 #include "Exception/ExceptionGraph/EdgeNotExsit.h"
+#include "Exception/ExceptionGraph/VertexNotExist.h"
 #include <cmath>
 #include <type_traits>
 
@@ -37,29 +38,41 @@ class Graph{
         graph[from][to] = weight;
     }
 
-    //  /**
-    //  * @brief order parents that all son have set of his 
-    //  * sons
-    //  * @return unorderd map of sets
-    //  */
-    // unordered_map<V,set<V>> OrderParents() const{
-    //     unordered_map<V,set<V>> parentmap;
-    //     for(const auto pair:graph){
-    //         parentmap[pair.first.from].insert(pair.first.to);
-    //     }
-    //     return parentmap;
-    // }
 
+    /**
+     * @brief return a unorderd_map
+     *  of vertex that goes parent -> other vertex
+     * @param parent - the vertex we want to find who the vertex parent
+     * @return a set of sons of parent
+     */
+    unordered_map<V,W> Parent(const V &parent) const {
+        return this->operator[](parent);
+    }
+
+    /**
+     * @brief return a unorderd_map 
+     * of vertex that goes parent -> other vertex
+     * @param parent - the vertex we want to find who the vertex parent
+     * @return a set of sons of parent
+     */
+    unordered_map<V,W>& operator[](const V &parent){
+        return graph[parent];
+    }  
+
+     /**
+     * @brief return a unorderd_map 
+     * of vertex that goes parent -> other vertex
+     * @param parent - the vertex we want to find who the vertex parent
+     * @return a set of sons of parent
+     */
+    const unordered_map<V,W>& operator[](const V &parent) const{
+       auto it = graph.find(parent);
+       if(it == graph.end()){
+            throw VertexNotExist();
+       }
+       return it->second;    
+    }
     
-
-    // /**
-    //  * @brief return a set of vertex that goes parent -> other vertex
-    //  * @param parent - the vertex we want to find who the vertex parent
-    //  * @return a set of sons of parent
-    //  */
-    // set<V> Parent(const V &parent) const {
-    //     return OrderParents()[parent];
-    // }
 
 
     // /**
@@ -111,14 +124,14 @@ class Graph{
     //     return Son(vertex).size();
     // }
 
-    // /**
-    //  * @brief return the dout(v) of the vertex
-    //  * @param vertex - the vertex we search is deg
-    //  * @return int 
-    //  */
-    // int degout(const V &vertex)const {
-    //     return graph[vertex].size();
-    // }
+    /**
+     * @brief return the dout(v) of the vertex
+     * @param vertex - the vertex we search is deg
+     * @return int 
+     */
+    int degout(const V &vertex)const {
+        return Parent(vertex).size();
+    }
 
     // /**
     //  * @brief return number of edges on the graph
@@ -232,6 +245,8 @@ class Graph{
     //     }
         
     // };
+
+
     //default constractor
     Graph() = default;
 
@@ -325,27 +340,16 @@ class Graph{
         SetEdge(from,to,weight);
     }
 
-    // /**
-    //  * @brief equal to graph and return true if are the same
-    //  * @param graph1 - the first graph we equal
-    //  * @param graph2 - the second graph we equal
-    //  * @return a bool val if they equal
-    //  */
-    // friend bool operator==(const Graph &graph1, 
-    // const Graph &graph2){
-    //     if(graph1.size() != graph2.size()){
-    //         return false;
-    //     }
-
-    //     for(auto &pair : graph1.graph){
-    //         auto it = graph2.graph.find(pair.first);
-    //         if(it == graph2.graph.end() || 
-    //         !areAlmostEqual<W>(it->second,pair.second)){
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // } 
+    /**
+     * @brief equal to graph and return true if are the same
+     * @param graph1 - the first graph we equal
+     * @param graph2 - the second graph we equal
+     * @return a bool val if they equal
+     */
+    friend bool operator==(const Graph &graph1, 
+    const Graph &graph2){
+        return graph1.graph == graph2.graph;
+    }
 
 
 };
