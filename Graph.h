@@ -7,7 +7,7 @@
 #include "Exception/ExceptionGraph/VertexNotExist.h"
 #include <cmath>
 #include <type_traits>
-
+#include <unordered_set>
 template<class V,class W>
 class Graph{
     public:
@@ -75,29 +75,43 @@ class Graph{
     
 
 
-    // /**
-    //  * @brief order sons that all son have set of his 
-    //  * parents
-    //  * @return unorderd map of sets
-    //  */
-    // unordered_map<V,set<V>> OrderSons() const{
-    //     unordered_map<V,set<V>> sonmap;
-    //      for(const auto pair: graph){
-    //         sonmap[pair.first.to].insert(pair.first.from);
-    //      }
-    //      return sonmap;
-    // }
+    /**
+     * @brief replace edges diractions
+     * @return unorderd map of sets
+     */
+     Graph<V,W> ReplaceDiractions() const{
+         Graph<V,W> replacegraph;
+         for(auto i = begin(); i != end(); ++i){
+            for(const auto &j : i->second){
+                replacegraph.SetEdge(j.first,i->first,
+                j.second);
+            }
+         }
+         return replacegraph;
+    }
 
-    // /**
-    //  * @brief return the parents of the son vertex
-    //  * @param son - the vertex we search his parents
-    //  * @return a set of parents of the son vertex
-    //  */
-    // set<V> Son(const V &son) const {
-    //   * otherwise it nothing happend
-    //  * @param from - the vertex we out from 
-    //  * @param to - the vertex get in to
-    // }
+    /**
+     * @brief get unorderd map of to -> (from,weight)
+     */
+    unordered_map<V,unordered_map<V,W>> OrderSons()const{
+        return ReplaceDiractions().graph;
+    }
+
+    /**
+     * @brief return the parents of the son vertex
+     * @param son - the vertex we search his parents
+     * @return a set of parents of the son vertex
+     */
+    unordered_map<V,W> Son(const V &son) const {
+        unordered_map<V,W> sonmap;
+        for(auto i = begin();i != end(); ++i){
+            auto neigbour = i->second.find(son);
+            if(neigbour != i->second.end()){
+                sonmap[i->first] = neigbour->second;
+            }
+        }
+        return sonmap;
+    }
 
     /**
      * @brief delete edge from the graph
@@ -108,21 +122,26 @@ class Graph{
         if(!ContainEdge(from,to)){
             return;
         }
+
         auto it = getIterator(from,to);
         auto neighbours = graph.find(from);
         neighbours->second.erase(it);
+        //if the vertex doesn't connect
+        //to save memory
+        if(neighbours->second.empty()){
+            graph.erase(neighbours);
+        }
     }  
 
 
-   
-    // /**
-    //  * @brief return the din(v) of the vertex
-    //  * @param vertex - the vertex we search is deg
-    //  * @return int 
-    //  */
-    // int degin(const V &vertex)const {
-    //     return Son(vertex).size();
-    // }
+    /**
+     * @brief return the din(v) of the vertex
+     * @param vertex - the vertex we search is deg
+     * @return int 
+     */
+    int degin(const V &vertex)const {
+        return Son(vertex).size();
+    }
 
     /**
      * @brief return the dout(v) of the vertex
@@ -147,7 +166,6 @@ class Graph{
      * @param vertexs the set of vertexs we put on the graph
      * @param function - the function that calculate the weight of edge
      * @param defaultval - check if the user want default val on the graph
-     * 
      */
     Graph(const set<V> &vertexs,const Function &function,
     const bool defaultin = false){
@@ -191,60 +209,61 @@ class Graph{
         { // Delegating constructor using initializer list
     }
 
-    // class Iterator{
-    //     private:
-    //     const Graph *graph;
-    //     using InnerIterator = typename std::unordered_map<Edge<V>, 
-    //     W,EdgeHash<V>>::const_iterator;
-    //     InnerIterator it;
-    //     friend class Graph;
-    //     public:
-    //     /**
-    //      * @brief operator* it
-    //      * @return pair of edge and weight
-    //      */
-    //     const pair<Edge<V>,W>& operator*() const {
-    //         return *it;
-    //     }
+    class Iterator{
+        private:
+        const Graph *graph;
+        using ExtendedIterator = typename 
+        std::unordered_map<V,unordered_map<V,W>>::const_iterator;
+        ExtendedIterator extandit;        
+        friend class Graph;
 
-    //     /**
-    //      * @brief get the next val
-    //      * @return it
-    //      */
-    //     Iterator& operator++(){
-    //         if(it == graph->graph.end()){
-    //             return *this;
-    //         }
-    //         ++it;
-    //         return *this;
-    //     }
+          /**
+         * @brief constractor of it
+         * @param graph -the graph we iterate
+         * @param graphit - the it of unorderd map
+         */
+        Iterator(const Graph *graph,
+        ExtendedIterator extandit):
+        extandit(extandit),graph(graph){
+        }
 
-    //     /**
-    //      * @brief return true if it isn't the same
-    //      * it
-    //      */
-    //     bool operator!=(const Iterator &other) const {
-    //         return it != other.it;
-    //     }
+    public:
+        /**
+         * @brief operator* it
+         * @return pair of edge and weight
+         */
+        const pair<V,unordered_map<V,W>>& operator*() const {
+            return *extandit;
+        }
 
-    //     /**
-    //      * @brief constractor of it
-    //      * @param graph -the graph we iterate
-    //      * @param graphit - the it of unorderd map
-    //      */
-    //     Iterator(const Graph *graph,InnerIterator it){
-    //         this->graph = graph;
-    //         this->it = it;
-    //     }
+        /**
+         * @brief get the next val
+         * @return it
+         */
+        Iterator& operator++(){
+            if(extandit == graph->graph.end()){
+                return *this;
+            }
+            ++extandit;
+            return *this;
+        }
 
-    //     /**
-    //      * @brief  operator->
-    //      */
-    //     const std::pair<const Edge<V>, W>* operator->() const {
-    //         return &(*it);
-    //     }
-        
-    // };
+        /**
+         * @brief return true if it isn't the same
+         * it
+         */
+        bool operator!=(const Iterator &other) const {
+            return extandit != other.extandit;
+        }
+
+        /**
+        * @brief  operator->
+        */
+        const std::pair<const V, unordered_map<V, W>>* operator->() const {
+            return &(*extandit);
+        }
+
+    };
 
 
     //default constractor
@@ -270,22 +289,21 @@ class Graph{
         return graph[from][to];
     }
 
-    // /**
-    //  * @brief return the begin it of the graph
-    //  * @return iterator
-    //  */
-    // Iterator begin() const {
-    //     return Graph::Iterator(this,graph.begin());
-    // }
+    /**
+     * @brief return the begin it of the graph
+     * @return iterator
+     */
+    Iterator begin() const {
+        return Graph::Iterator(this,graph.begin());
+    }
 
-
-    // /**
-    //  * @brief return the end it of the graph
-    //  * @return iterator
-    //  */
-    // Iterator end() const{
-    //     return  Graph::Iterator(this,graph.end());
-    // }
+    /**
+     * @brief return the end it of the graph
+     * @return iterator
+     */
+    Iterator end() const{
+        return  Graph::Iterator(this,graph.end());
+    }
 
     /**
      * @brief return the weight of the edge we take by const
