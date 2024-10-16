@@ -81,24 +81,27 @@ class Graph{
     //  * @return a set of parents of the son vertex
     //  */
     // set<V> Son(const V &son) const {
-    //     return OrderSons()[son];
-    // }
-
-
-    // /**
-    //  * @brief if the edge exsit delete it
-    //  * otherwise it nothing happend
+    //   * otherwise it nothing happend
     //  * @param from - the vertex we out from 
     //  * @param to - the vertex get in to
-    //  */
-    // void deleteEdge(const V& from,const V& to){
-    //     if(!ContainEdge(from,to)){
-    //         return;
-    //     }
-    //     Edge edge(from,to);
-    //     graph.erase(edge);
     // }
 
+    /**
+     * @brief delete edge from the graph
+     * @param from - the vertex we out from
+     * @param to - the vertex we sign in to
+     */
+    void deleteEdge(const V& from,const V& to){
+        if(!ContainEdge(from,to)){
+            return;
+        }
+        auto it = getIterator(from,to);
+        auto neighbours = graph.find(from);
+        neighbours->second.erase(it);
+    }  
+
+
+   
     // /**
     //  * @brief return the din(v) of the vertex
     //  * @param vertex - the vertex we search is deg
@@ -277,17 +280,35 @@ class Graph{
      * @return refernce of the weight 
      */
     const W& operator()(const V& from, const V& to) const{
-        if(!ContainEdge(from,to)){
-            throw EdgeNotExsit();
-        }
-        
-        auto neighbours = graph.find(from);
-        auto it = neighbours->second.find(to);
+        auto it = getIterator(from,to);
         return it->second;
     }
 
     private:
     unordered_map<V,unordered_map<V,W>> graph;
+    using InnerMapIterator = 
+    typename std::unordered_map<V, W>::iterator;
+    /**
+     * @brief return innermap iterator of the edge 
+     * from -> to
+     * @param from the vertex we out from
+     * @param to - the vertex we sign in to
+     * @return a unorderdmap iterator
+     */
+    InnerMapIterator getIterator(const V &from,const V &to){
+        auto neighbours = graph.find(from);
+        if(neighbours == graph.end()){
+            throw EdgeNotExsit();
+        }
+        auto it = neighbours->second.find(to);
+
+        if(it == neighbours->second.end()){
+            throw EdgeNotExsit();
+        }
+
+        return it;
+    }
+
     /**
      * @brief check if we need to save this edge on the memory
      * @param from - the edge we out from
